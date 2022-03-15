@@ -70,6 +70,7 @@ static struct tray tray = {
 
 int main() {
 #ifdef __WIN32
+  FreeConsole();
   WSADATA wsa;
   if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
     return -1;
