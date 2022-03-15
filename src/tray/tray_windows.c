@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdbool.h>
 #include <windows.h>
 #include <shellapi.h>
@@ -8,11 +9,22 @@
 
 WNDCLASSEX wc;
 
-struct tray *curtray;
-int last_id = 1000;
+static struct tray **trays = NULL;
+static int trays_len = 0;
+static struct tray *curtray;
+static int last_id = 0;
 
 static LRESULT CALLBACK _tray_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam,
                                        LPARAM lparam) {
+  struct tray *t = NULL;
+  for (int i=0; i<trays_len; i++) {
+    if (trays[i]->hwnd == hwnd) {
+      t = trays[i];
+      break;
+    }
+  }
+  if (!t) t = curtray;
+
   switch (msg) {
   case WM_CLOSE:
     DestroyWindow(hwnd);
@@ -25,7 +37,7 @@ static LRESULT CALLBACK _tray_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam,
       POINT p;
       GetCursorPos(&p);
       SetForegroundWindow(hwnd);
-      WORD cmd = TrackPopupMenu(curtray->hmenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON |
+      WORD cmd = TrackPopupMenu(t->hmenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON |
                                                 TPM_RETURNCMD | TPM_NONOTIFY,
                                 p.x, p.y, 0, hwnd, NULL);
       SendMessage(hwnd, WM_COMMAND, cmd, 0);
@@ -33,11 +45,11 @@ static LRESULT CALLBACK _tray_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam,
     }
     break;
   case WM_COMMAND:
-    if (wparam >= curtray->id) {
+    if (wparam >= t->id) {
       MENUITEMINFO item = {
           .cbSize = sizeof(MENUITEMINFO), .fMask = MIIM_ID | MIIM_DATA,
       };
-      if (GetMenuItemInfo(curtray->hmenu, wparam, FALSE, &item)) {
+      if (GetMenuItemInfo(t->hmenu, wparam, FALSE, &item)) {
         struct tray_menu *menu = (struct tray_menu *)item.dwItemData;
         if (menu != NULL && menu->cb != NULL) {
           menu->cb(menu);
@@ -110,9 +122,16 @@ int tray_init(struct tray *tray) {
   tray->nid.uCallbackMessage = WM_TRAY_CALLBACK_MESSAGE;
   Shell_NotifyIcon(NIM_ADD, &tray->nid);
 
-  tray->id = last_id += 100;
+  tray->id = last_id += 1000;
 
   tray_update(tray);
+
+  if (trays == NULL)
+    trays = malloc(sizeof(struct tray*));
+  else
+    trays = realloc(trays, sizeof(struct tray*)*(trays_len+1));
+  trays[trays_len++] = tray;
+
   return 0;
 }
 
@@ -158,13 +177,16 @@ void tray_update(struct tray *tray) {
 }
 
 void tray_exit(struct tray *tray) {
-  Shell_NotifyIcon(NIM_DELETE, &tray->nid);
-  if (tray->nid.hIcon != 0) {
-    DestroyIcon(tray->nid.hIcon);
+  for (int i=0; i<trays_len; i++) {
+    Shell_NotifyIcon(NIM_DELETE, &trays[i]->nid);
+    if (trays[i]->nid.hIcon != 0) {
+      DestroyIcon(trays[i]->nid.hIcon);
+    }
+    if (trays[i]->hmenu != 0) {
+      DestroyMenu(trays[i]->hmenu);
+    }
   }
-  if (tray->hmenu != 0) {
-    DestroyMenu(tray->hmenu);
-  }
+  free(trays);
   PostQuitMessage(0);
   UnregisterClass(WC_TRAY_CLASS_NAME, GetModuleHandle(NULL));
 }

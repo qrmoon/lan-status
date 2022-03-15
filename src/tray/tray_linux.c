@@ -67,4 +67,3 @@ void tray_update(struct tray *tray) {
 }
 
 void tray_exit(struct tray *tray) { tray->loop_result = -1; }
-
