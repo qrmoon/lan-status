@@ -2,8 +2,6 @@
 #include <libappindicator/app-indicator.h>
 #include "tray.h"
 
-#define TRAY_APPINDICATOR_ID "tray-id"
-
 static void _tray_menu_cb(GtkMenuItem *item, gpointer data) {
   (void)item;
   struct tray_menu *m = (struct tray_menu *)data;
@@ -39,13 +37,22 @@ static GtkMenuShell *_tray_menu(struct tray_menu *m) {
 }
 
 int tray_init(struct tray *tray) {
+  static int id = 0;
+  id += 1;
+
   if (gtk_init_check(0, NULL) == FALSE) {
     return -1;
   }
+
+  char tray_id[32];
+  memset(tray_id, 0, 32*sizeof(char));
+  sprintf(tray_id, "tray_%d", id);
+
   tray->indicator = app_indicator_new(
-    TRAY_APPINDICATOR_ID, tray->icon,
+    tray_id, tray->icon,
     APP_INDICATOR_CATEGORY_APPLICATION_STATUS
   );
+
   app_indicator_set_status(tray->indicator, APP_INDICATOR_STATUS_ACTIVE);
   tray_update(tray);
   return 0;
