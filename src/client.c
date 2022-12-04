@@ -29,6 +29,33 @@
 #define DEFAULT_PORT 5050
 #define PING_INTERVAL 0.5
 
+int sconnect(struct sockaddr_in *server_addr, char **err) {
+  int sock;
+
+  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    *err = NULL;
+    return -1;
+  }
+
+  if (connect(sock, (SA*)server_addr, sizeof(*server_addr)) < 0) {
+    if (err) *err = "Cannot connect to server";
+    close(sock);
+    return -1;
+  }
+
+  set_blocking(sock, false);
+
+  if (ssend(sock, "PING\n", 0) < 0) {
+    if (err) *err = "Cannot send message";
+    close(sock);
+    return -1;
+  }
+
+  set_blocking(sock, false);
+
+  return sock;
+}
+
 static int status = READY;
 static bool status_changed = false;
 
@@ -86,29 +113,24 @@ int main() {
   }
   fclose(file);
 
-  int sock;
   struct sockaddr_in server_addr;
 
-  if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-    printf("Cannot create socket\n");
-    return 1;
-  }
   memset(&server_addr, 0, sizeof(server_addr));
-
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(port);
+
   if (inet_pton(AF_INET, addr, &server_addr.sin_addr) <= 0) {
     printf("Invalid address\n");
-    close(sock);
     return 1;
   }
 
-  if (connect(sock, (SA*)&server_addr, sizeof(server_addr)) < 0) {
-    printf("Cannot connect to server\n");
+  char *err = NULL;
+  int sock = sconnect(&server_addr, &err);
+  if (sock < 0) {
+    if (err) printf("%s\n", err);
     close(sock);
     return 1;
   }
-
   set_blocking(sock, false);
 
   if (ssend(sock, "PING\n", 0) < 0) {
@@ -133,6 +155,7 @@ int main() {
   char buffer[BUFFER_SIZE];
   memset(buffer, 0, BUFFER_SIZE);
   clock_t last_ping = 0;
+  int last_status = READY;
   while (true) {
     if (status_changed) {
       switch (status) {
@@ -149,9 +172,23 @@ int main() {
       status_changed = false;
     }
     if ((float)(clock()-last_ping)/CLOCKS_PER_SEC >= PING_INTERVAL) {
-      // informujemy serwer, że wciąż jesteśmy połączeni
       last_ping = clock();
-      ssend(sock, "PING\n", 0);
+      if (ssend(sock, "PING\n", 0) < 0) {
+        close(sock);
+
+        if (status != DISCONNECTED)
+          last_status = status;
+
+        char *err;
+        sock = sconnect(&server_addr, &err);
+
+        if (sock < 0)
+          status = DISCONNECTED;
+        else
+          status = last_status;
+
+        if (err) printf("%s\n", err);
+      }
     }
     char buff[BUFFER_SIZE];
     memset(buff, 0, BUFFER_SIZE);
