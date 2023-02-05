@@ -154,7 +154,7 @@ int main() {
 
   char buffer[BUFFER_SIZE];
   memset(buffer, 0, BUFFER_SIZE);
-  clock_t last_ping = 0;
+  time_t last_ping = 0;
   int last_status = READY;
   while (true) {
     if (status_changed) {
@@ -171,15 +171,15 @@ int main() {
       }
       status_changed = false;
     }
-    if ((float)(clock()-last_ping)/CLOCKS_PER_SEC >= PING_INTERVAL) {
-      last_ping = clock();
+    if (ptime()-last_ping >= PING_INTERVAL) {
+      last_ping = ptime();
       if (ssend(sock, "PING\n", 0) < 0) {
         close(sock);
 
         if (status != DISCONNECTED)
           last_status = status;
 
-        char *err;
+        char *err = NULL;
         sock = sconnect(&server_addr, &err);
 
         if (sock < 0)
@@ -222,6 +222,8 @@ int main() {
     } else {
       break;
     }
+
+    msleep(LOOP_SLEEP);
   }
 
   return 0;

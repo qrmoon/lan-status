@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <fcntl.h>
+#include <time.h>
 
 #define BUFFER_SIZE 1024
 #define BUFFER_SMALL_SIZE 256
@@ -48,6 +49,10 @@ int string_to_status(char *s) {
     return PROBLEM;
   else
     return -1;
+}
+
+time_t ptime() {
+  return time(NULL);
 }
 
 #endif

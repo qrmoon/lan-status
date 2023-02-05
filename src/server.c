@@ -33,7 +33,7 @@
 typedef struct {
   int sock;
   int status;
-  clock_t last_ping;
+  time_t last_ping;
   char name[BUFFER_SMALL_SIZE];
   char addr[BUFFER_SMALL_SIZE];
   int tray_id;
@@ -261,7 +261,7 @@ int main() {
         if (strcmp(addr, peers[i].addr) == 0
             && peers[i].status == DISCONNECTED) {
           peers[i].sock = connfd;
-          peers[i].last_ping = clock();
+          peers[i].last_ping = ptime();
           matched = true;
           printf(
             "%s [%d]: connected %s\n",
@@ -288,7 +288,7 @@ int main() {
         break;
       if (peers[i].sock == -1) continue;
 
-      if ((float)(clock()-peers[i].last_ping)/CLOCKS_PER_SEC > TIMEOUT) {
+      if (ptime()-peers[i].last_ping > TIMEOUT) {
         close(peers[i].sock);
         peers[i].sock = -1;
         peers[i].status = DISCONNECTED;
@@ -313,7 +313,7 @@ int main() {
               peers[i].status = status;
               printf("%s [%d] -> %s\n", peers[i].name, i, buffers[i]);
             } else if (strcmp(buffers[i], "PING") == 0) {
-              peers[i].last_ping = clock();
+              peers[i].last_ping = ptime();
             } else {
               puts(buffers[i]);
             }
