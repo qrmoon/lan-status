@@ -28,6 +28,7 @@
 
 #define TIMEOUT 2.0
 #define DEFAULT_CLIENT_NAME "klient"
+#define MAX_ICON_INDEX 24
 
 typedef struct {
   int sock;
@@ -37,6 +38,7 @@ typedef struct {
   char addr[BUFFER_SMALL_SIZE];
   int tray_id;
   struct tray tray;
+  int index;
 } peer_t;
 static peer_t *peers;
 static int peers_len = 0;
@@ -111,13 +113,35 @@ int main() {
     "icons/disconnected.ico"
   };
 
+  // TODO: check for files up to a limit and expand array
+  char numbered_icons[4][MAX_ICON_INDEX][128];
+  memset(numbered_icons, 0, sizeof(char)*4*MAX_ICON_INDEX*128);
+  for (int i = 1; i <= MAX_ICON_INDEX; i++) {
+    char buff[BUFFER_SMALL_SIZE];
+
+    sprintf(buff, "icons/numbered/ready_%d.ico", i);
+    strcpy(numbered_icons[0][i-1], buff);
+
+    sprintf(buff, "icons/numbered/working_%d.ico", i);
+    strcpy(numbered_icons[1][i-1], buff);
+
+    sprintf(buff, "icons/numbered/problem_%d.ico", i);
+    strcpy(numbered_icons[2][i-1], buff);
+
+    sprintf(buff, "icons/numbered/disconnected_%d.ico", i);
+    strcpy(numbered_icons[3][i-1], buff);
+  }
+
   FILE *file = fopen("peers", "r");
   if (file != NULL) {
     char addr[BUFFER_SMALL_SIZE];
     char name[BUFFER_SMALL_SIZE];
+    int index;
     memset(addr, 0, BUFFER_SMALL_SIZE);
     memset(name, 0, BUFFER_SMALL_SIZE);
-    while (fscanf(file, "%s %s", addr, name) == 2) {
+    char line[BUFFER_SMALL_SIZE];
+    while (fgets(line, BUFFER_SMALL_SIZE, file)) {
+      int n = sscanf(line, "%s %s %d", addr, name, &index);
       if (peers_len == 0)
         peers = malloc(sizeof(peer_t));
       else
@@ -127,6 +151,7 @@ int main() {
       memcpy(peers[peers_len].addr, addr, BUFFER_SMALL_SIZE);
       peers[peers_len].sock = -1;
       peers[peers_len].status = DISCONNECTED;
+      peers[peers_len].index = (n == 3) ? index : 0;
       peers_len++;
     }
     fclose(file);
@@ -153,7 +178,10 @@ int main() {
   tray_init(&main_tray);
 
   for (int i=0; i<peers_len; i++) {
-    peers[i].tray.icon = icons[DISCONNECTED];
+    if (peers[i].index == 0)
+      peers[i].tray.icon = icons[DISCONNECTED];
+    else
+      peers[i].tray.icon = numbered_icons[DISCONNECTED][peers[i].index-1];
     peers[i].tray.tooltip = peers[i].name;
 
     peers[i].tray.menu = malloc(sizeof(struct tray_menu)*6);
@@ -264,7 +292,10 @@ int main() {
         close(peers[i].sock);
         peers[i].sock = -1;
         peers[i].status = DISCONNECTED;
-        peers[i].tray.icon = icons[DISCONNECTED];
+        if (peers[i].index == 0)
+          peers[i].tray.icon = icons[DISCONNECTED];
+        else
+          peers[i].tray.icon = numbered_icons[DISCONNECTED][peers[i].index-1];
         tray_update(&peers[i].tray);
         printf("%s [%d]: disconnected\n", peers[i].name, i);
         continue;
@@ -296,9 +327,16 @@ int main() {
         }
       }
 
-      if (peers[i].tray.icon != icons[peers[i].status]) {
-        peers[i].tray.icon = icons[peers[i].status];
-        tray_update(&peers[i].tray);
+      if (peers[i].index == 0) {
+        if (peers[i].tray.icon != icons[peers[i].status]) {
+          peers[i].tray.icon = icons[peers[i].status];
+          tray_update(&peers[i].tray);
+        }
+      } else {
+       if (peers[i].tray.icon != numbered_icons[peers[i].status][peers[i].index-1]) {
+          peers[i].tray.icon = numbered_icons[peers[i].status][peers[i].index-1];
+          tray_update(&peers[i].tray);
+        }
       }
     }
   }
