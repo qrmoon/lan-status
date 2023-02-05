@@ -10,8 +10,15 @@
 #define BUFFER_SMALL_SIZE 256
 #define ssend(sock, s, flags) (send(sock, s, strlen(s), flags))
 
+#define LOOP_SLEEP 0.001
+
 #ifdef __WIN32
+#include <windows.h>
 #define close(sock) closesocket(sock)
+#define msleep(sec) Sleep(sec * 1000)
+#else
+#include <unistd.h>
+#define msleep(sec) usleep(sec * 1000000)
 #endif
 
 void set_blocking(int sock, bool b) {

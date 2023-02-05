@@ -339,6 +339,7 @@ int main() {
         }
       }
     }
+    msleep(LOOP_SLEEP);
   }
 
 cleanup:
