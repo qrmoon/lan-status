@@ -129,14 +129,12 @@ int main() {
   if (sock < 0) {
     if (err) printf("%s\n", err);
     close(sock);
-    return 1;
   }
   set_blocking(sock, false);
 
   if (ssend(sock, "PING\n", 0) < 0) {
     printf("Cannot send message\n");
     close(sock);
-    return 1;
   }
 
   char icons[4][32] = {
