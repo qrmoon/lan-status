@@ -27,7 +27,9 @@ char *locale_pl_PL[] = {
   "W trakcie",
   "Problem",
 
-  "Nieznany język"
+  "Nieznany język `%s`\n",
+  "Błąd w pliku konfiguracji\n",
+  "Nieznane pole `%s`\n"
 };
 
 char *local_string_pl_PL(int i) {

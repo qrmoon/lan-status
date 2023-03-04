@@ -27,7 +27,9 @@ char *locale_en_US[] = {
   "Working",
   "Problem",
 
-  "Unknown locale"
+  "Unknown locale `%s`\n",
+  "Error in config file\n",
+  "Unknown field `%s`\n"
 };
 
 char *local_string_en_US(int i) {

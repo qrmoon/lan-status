@@ -25,7 +25,9 @@ enum local_string {
   STATUS_WORKING,
   STATUS_PROBLEM,
 
-  UNKNOWN_LOCALE
+  UNKNOWN_LOCALE,
+  CONFIG_ERROR,
+  UNKNOWN_FIELD
 };
 
 char *(*local_string_func)(int);

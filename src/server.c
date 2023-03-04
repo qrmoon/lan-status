@@ -106,7 +106,12 @@ int main() {
     return -1;
   }
 #endif
-  set_locale_en_US();
+  struct config config;
+  load_config(&config, "config");
+
+  if (!set_locale_str(config.lang)) {
+    printf(LOCAL_TEXT(UNKNOWN_LOCALE), config.lang);
+  }
 
   int ret = 0;
 
@@ -218,12 +223,8 @@ int main() {
 
   int sock;
   struct sockaddr_in server_addr;
-  char addr[BUFFER_SMALL_SIZE];
-  int port;
-  file = fopen("host", "r");
-  if (file == NULL) return 6;
-  fscanf(file, "%s %d", addr, &port);
-  fclose(file);
+  char *addr = config.addr;
+  int port = config.port;
 
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     ret = 1;

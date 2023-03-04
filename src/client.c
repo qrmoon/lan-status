@@ -105,7 +105,12 @@ int main() {
     return -1;
   }
 #endif
-  set_locale_en_US();
+  struct config config;
+  load_config(&config, "config");
+
+  if (!set_locale_str(config.lang)) {
+    printf(LOCAL_TEXT(UNKNOWN_LOCALE), config.lang);
+  }
 
   tray.menu[0].text = LOCAL_TEXT(STATUS_READY);
   tray.menu[1].text = LOCAL_TEXT(STATUS_WORKING);
