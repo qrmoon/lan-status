@@ -23,6 +23,8 @@
 
 #include "tray/tray.h"
 #include "common.h"
+#include "locale.h"
+#include "locales/all.h"
 
 #define SA struct sockaddr
 
@@ -38,7 +40,7 @@ int sconnect(struct sockaddr_in *server_addr, char **err) {
   }
 
   if (connect(sock, (SA*)server_addr, sizeof(*server_addr)) < 0) {
-    if (err) *err = "Cannot connect to server";
+    if (err) *err = LOCAL_TEXT(CANNOT_CONNECT_TO_SERVER);
     close(sock);
     return -1;
   }
@@ -46,7 +48,7 @@ int sconnect(struct sockaddr_in *server_addr, char **err) {
   set_blocking(sock, false);
 
   if (ssend(sock, "PING\n", 0) < 0) {
-    if (err) *err = "Cannot send message";
+    if (err) *err = LOCAL_TEXT(CANNOT_SEND_MESSAGE);
     close(sock);
     return -1;
   }
@@ -85,11 +87,11 @@ static void quit_cb(struct tray_menu *item) {
 
 static struct tray tray = {
   .menu = (struct tray_menu[]) {
-    { .text = "Gotowy", .cb = ready_cb },
-    { .text = "W trakcie", .cb = working_cb },
-    { .text = "Problem", .cb = problem_cb },
+    { .text = NULL, .cb = ready_cb },
+    { .text = NULL, .cb = working_cb },
+    { .text = NULL, .cb = problem_cb },
     { .text = "-" },
-    { .text = "Zamknij", .cb = quit_cb },
+    { .text = NULL, .cb = quit_cb },
     { .text = NULL }
   }
 };
@@ -103,6 +105,13 @@ int main() {
     return -1;
   }
 #endif
+  set_locale_en_US();
+
+  tray.menu[0].text = LOCAL_TEXT(STATUS_READY);
+  tray.menu[1].text = LOCAL_TEXT(STATUS_WORKING);
+  tray.menu[2].text = LOCAL_TEXT(STATUS_PROBLEM);
+  tray.menu[4].text = LOCAL_TEXT(TRAY_CLOSE);
+
   char addr[BUFFER_SMALL_SIZE];
   int port;
 
@@ -120,20 +129,20 @@ int main() {
   server_addr.sin_port = htons(port);
 
   if (inet_pton(AF_INET, addr, &server_addr.sin_addr) <= 0) {
-    printf("Invalid address\n");
+    printf(LOCAL_TEXT(INVALID_ADDRESS));
     return 1;
   }
 
   char *err = NULL;
   int sock = sconnect(&server_addr, &err);
   if (sock < 0) {
-    if (err) printf("%s\n", err);
+    if (err) printf("%s", err);
     close(sock);
   }
   set_blocking(sock, false);
 
   if (ssend(sock, "PING\n", 0) < 0) {
-    printf("Cannot send message\n");
+    printf(LOCAL_TEXT(CANNOT_SEND_MESSAGE));
     close(sock);
   }
 
@@ -185,7 +194,7 @@ int main() {
         else
           status = last_status;
 
-        if (err) printf("%s\n", err);
+        if (err) printf("%s", err);
       }
     }
     char buff[BUFFER_SIZE];

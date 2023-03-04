@@ -23,6 +23,8 @@
 
 #include "tray/tray.h"
 #include "common.h"
+#include "locale.h"
+#include "locales/all.h"
 
 #define SA struct sockaddr
 
@@ -104,6 +106,8 @@ int main() {
     return -1;
   }
 #endif
+  set_locale_en_US();
+
   int ret = 0;
 
   char icons[4][32] = {
@@ -159,7 +163,7 @@ int main() {
     }
     fclose(file);
   } else {
-    printf("Cannot open `peers`\n");
+    printf(LOCAL_TEXT(CANNOT_OPEN_FILE), "peers");
     return 1;
   }
 
@@ -168,13 +172,13 @@ int main() {
 
   struct tray main_tray = {
     .icon = "icons/main.ico",
-    .tooltip = "Wszyscy",
+    .tooltip = LOCAL_TEXT(TRAY_EVERYBODY),
     .menu = (struct tray_menu[]) {
-      { .text = "Gotowy", .cb = ready_all_cb },
-      { .text = "W trakcie", .cb = working_all_cb },
-      { .text = "Problem", .cb = problem_all_cb },
+      { .text = LOCAL_TEXT(STATUS_READY), .cb = ready_all_cb },
+      { .text = LOCAL_TEXT(STATUS_WORKING), .cb = working_all_cb },
+      { .text = LOCAL_TEXT(STATUS_PROBLEM), .cb = problem_all_cb },
       { .text = "-" },
-      { .text = "Zamknij", .cb = quit_cb },
+      { .text = LOCAL_TEXT(TRAY_CLOSE), .cb = quit_cb },
       { .text = NULL }
     }
   };
@@ -192,22 +196,22 @@ int main() {
     peers[i].tray.menu[0].text = peers[i].name;
     peers[i].tray.menu[1].text = "-";
 
-    peers[i].tray.menu[2].text = "Gotowy";
+    peers[i].tray.menu[2].text = LOCAL_TEXT(STATUS_READY);
     peers[i].tray.menu[2].context = &peers[i];
     peers[i].tray.menu[2].cb = ready_cb;
 
-    peers[i].tray.menu[3].text = "W trakcie";
+    peers[i].tray.menu[3].text = LOCAL_TEXT(STATUS_WORKING);
     peers[i].tray.menu[3].context = &peers[i];
     peers[i].tray.menu[3].cb = working_cb;
 
-    peers[i].tray.menu[4].text = "Problem";
+    peers[i].tray.menu[4].text = LOCAL_TEXT(STATUS_PROBLEM);
     peers[i].tray.menu[4].context = &peers[i];
     peers[i].tray.menu[4].cb = problem_cb;
 
     peers[i].tray.menu[5].text = NULL;
     if (tray_init(&peers[i].tray) < 0) {
       ret = 1;
-      printf("Cannot create tray icon\n");
+      printf(LOCAL_TEXT(CANNOT_CREATE_TRAY_ICON));
       goto cleanup;
     }
   }
@@ -223,7 +227,7 @@ int main() {
 
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     ret = 1;
-    printf("Cannot open socket\n");
+    printf(LOCAL_TEXT(CANNOT_OPEN_SOCKET));
     goto cleanup;
   }
   memset(&server_addr, 0, sizeof(server_addr));
@@ -231,20 +235,20 @@ int main() {
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(port);
   if (inet_pton(AF_INET, addr, &server_addr.sin_addr) <= 0) {
-    printf("Invalid address\n");
+    printf(LOCAL_TEXT(INVALID_ADDRESS));
     ret = 1;
     goto cleanup;
   }
 
   if (bind(sock, (SA*)&server_addr, sizeof(server_addr)) < 0) {
     ret = 1;
-    printf("Cannot bind\n");
+    printf(LOCAL_TEXT(CANNOT_BIND_ADDRESS));
     goto cleanup;
   }
 
   if (listen(sock, peers_len*2) < 0) {
     ret = 1;
-    printf("Cannot listen\n");
+    printf(LOCAL_TEXT(CANNOT_LISTEN_ON_ADDRESS));
     goto cleanup;
   }
 
@@ -267,9 +271,10 @@ int main() {
           peers[i].last_ping = ptime();
           matched = true;
           printf(
-            "%s [%d]: connected %s\n",
+            "%s [%d]: %s %s\n",
             peers[i].name,
             i,
+            LOCAL_TEXT(PEER_CONNECTED),
             addr
           );
           ssend(peers[i].sock, "READY\n", 0);
@@ -278,8 +283,9 @@ int main() {
       }
       if (!matched) {
         printf(
-          "[%s]: unknown address or already connected\n",
-          addr
+          "[%s]: %s\n",
+          addr,
+          LOCAL_TEXT(PEER_UNKNOWN_ADDRESS_OR_ALREADY_CONNECTED)
         );
         close(connfd);
       }
@@ -300,7 +306,7 @@ int main() {
         else
           peers[i].tray.icon = numbered_icons[DISCONNECTED][peers[i].index-1];
         tray_update(&peers[i].tray);
-        printf("%s [%d]: disconnected\n", peers[i].name, i);
+        printf("%s [%d]: %s\n", peers[i].name, i, LOCAL_TEXT(PEER_DISCONNECTED));
         continue;
       }
 
