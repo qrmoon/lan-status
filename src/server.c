@@ -151,7 +151,10 @@ int main() {
       memcpy(peers[peers_len].addr, addr, BUFFER_SMALL_SIZE);
       peers[peers_len].sock = -1;
       peers[peers_len].status = DISCONNECTED;
-      peers[peers_len].index = (n == 3) ? index : 0;
+      if (n >= 3 && index <= MAX_ICON_INDEX)
+        peers[peers_len].index = index;
+      else
+        peers[peers_len].index = 0;
       peers_len++;
     }
     fclose(file);
