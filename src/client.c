@@ -117,15 +117,8 @@ int main() {
   tray.menu[2].text = LOCAL_TEXT(STATUS_PROBLEM);
   tray.menu[4].text = LOCAL_TEXT(TRAY_CLOSE);
 
-  char addr[BUFFER_SMALL_SIZE];
-  int port;
-
-  FILE *file = fopen("host", "r");
-  if (file == NULL) return 6;
-  if (fscanf(file, "%s %d", addr, &port) < 2) {
-    port = DEFAULT_PORT;
-  }
-  fclose(file);
+  char *addr = config.addr;
+  int port = config.port;
 
   struct sockaddr_in server_addr;
 
@@ -198,6 +191,7 @@ int main() {
           status = DISCONNECTED;
         else
           status = last_status;
+        tray_update(&tray);
 
         if (err) printf("%s", err);
       }
