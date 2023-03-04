@@ -98,9 +98,20 @@ static void quit_cb(struct tray_menu *item) {
 }
 
 
-int main() {
+int main(int argc, char *argv[]) {
 #ifdef __WIN32
-  FreeConsole();
+  bool console = false;
+#else
+  bool console = true;
+#endif
+
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-console") == 0)
+      console = true;
+  }
+
+#ifdef __WIN32
+  if (!console) FreeConsole();
   WSADATA wsa;
   if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
     return -1;
