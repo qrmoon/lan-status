@@ -4,14 +4,14 @@
 #include "locale.h"
 
 char *locale_en_US[] = {
-  "Cannot open `%s`\n",
-  "Cannot open socket\n",
+  "Cannot open `%s`: %s\n",
+  "Cannot open socket: %s\n",
 
-  "Cannot connect to server\n",
-  "Cannot send message\n",
+  "Cannot connect to server: %s\n",
+  "Cannot send message: %s\n",
 
-  "Cannot bind address\n",
-  "Cannot listen on address\n",
+  "Cannot bind address: %s\n",
+  "Cannot listen on address: %s\n",
   "Invalid address\n",
 
   "Cannot create tray icon\n",

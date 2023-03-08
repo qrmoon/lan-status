@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <errno.h>
 
 #ifdef __WIN32
 #include <w32api.h>
@@ -179,7 +180,7 @@ int main(int argc, char *argv[]) {
     }
     fclose(file);
   } else {
-    printf(LOCAL_TEXT(CANNOT_OPEN_FILE), "peers");
+    printf(LOCAL_TEXT(CANNOT_OPEN_FILE), "peers", strerror(errno));
     return 1;
   }
 
@@ -239,7 +240,7 @@ int main(int argc, char *argv[]) {
 
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     ret = 1;
-    printf(LOCAL_TEXT(CANNOT_OPEN_SOCKET));
+    printf(LOCAL_TEXT(CANNOT_OPEN_SOCKET), strerror(errno));
     goto cleanup;
   }
   memset(&server_addr, 0, sizeof(server_addr));
@@ -254,13 +255,13 @@ int main(int argc, char *argv[]) {
 
   if (bind(sock, (SA*)&server_addr, sizeof(server_addr)) < 0) {
     ret = 1;
-    printf(LOCAL_TEXT(CANNOT_BIND_ADDRESS));
+    printf(LOCAL_TEXT(CANNOT_BIND_ADDRESS), strerror(errno));
     goto cleanup;
   }
 
   if (listen(sock, peers_len*2) < 0) {
     ret = 1;
-    printf(LOCAL_TEXT(CANNOT_LISTEN_ON_ADDRESS));
+    printf(LOCAL_TEXT(CANNOT_LISTEN_ON_ADDRESS), strerror(errno));
     goto cleanup;
   }
 

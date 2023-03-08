@@ -4,14 +4,14 @@
 #include "locale.h"
 
 char *locale_pl_PL[] = {
-  "Nie można otworzyć `%s`\n",
-  "Nie można otworzyć gniazda\n",
+  "Nie można otworzyć `%s`: %s\n",
+  "Nie można otworzyć gniazda: %s\n",
 
-  "Nie można połączyć z serwerem\n",
-  "Nie można wysłać wiadomości\n",
+  "Nie można połączyć z serwerem: %s\n",
+  "Nie można wysłać wiadomości: %s\n",
 
-  "Nie można przypisać adresu\n",
-  "Nie można słuchać na adresie\n",
+  "Nie można przypisać adresu: %s\n",
+  "Nie można słuchać na adresie: %s\n",
   "Niepoprawny adres\n",
 
   "Nie można utworzyć ikony\n",

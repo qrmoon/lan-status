@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <errno.h>
 
 #ifdef __WIN32
 #include <w32api.h>
@@ -33,14 +34,17 @@
 
 int sconnect(struct sockaddr_in *server_addr, char **err) {
   int sock;
+  *err = malloc(sizeof(char) * BUFFER_SIZE);
 
   if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-    *err = NULL;
+    if (err)
+      sprintf(*err, LOCAL_TEXT(CANNOT_OPEN_SOCKET), strerror(errno));
     return -1;
   }
 
   if (connect(sock, (SA*)server_addr, sizeof(*server_addr)) < 0) {
-    if (err) *err = LOCAL_TEXT(CANNOT_CONNECT_TO_SERVER);
+    if (err)
+      sprintf(*err, LOCAL_TEXT(CANNOT_CONNECT_TO_SERVER), strerror(errno));
     close(sock);
     return -1;
   }
@@ -48,10 +52,14 @@ int sconnect(struct sockaddr_in *server_addr, char **err) {
   set_blocking(sock, false);
 
   if (ssend(sock, "PING\n", 0) < 0) {
-    if (err) *err = LOCAL_TEXT(CANNOT_SEND_MESSAGE);
+    if (err)
+      sprintf(*err, LOCAL_TEXT(CANNOT_SEND_MESSAGE), strerror(errno));
     close(sock);
     return -1;
   }
+
+  free(*err);
+  *err = NULL;
 
   return sock;
 }
@@ -144,14 +152,6 @@ int main(int argc, char *argv[]) {
   int sock = sconnect(&server_addr, &err);
   if (sock < 0) {
     if (err) printf("%s", err);
-    close(sock);
-  }
-
-  if (sock >= 0) {
-    if (ssend(sock, "PING\n", 0) < 0) {
-      printf(LOCAL_TEXT(CANNOT_SEND_MESSAGE));
-      close(sock);
-    }
   }
 
   char icons[4][32] = {
