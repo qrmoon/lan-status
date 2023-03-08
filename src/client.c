@@ -53,8 +53,6 @@ int sconnect(struct sockaddr_in *server_addr, char **err) {
     return -1;
   }
 
-  set_blocking(sock, false);
-
   return sock;
 }
 
@@ -148,11 +146,12 @@ int main(int argc, char *argv[]) {
     if (err) printf("%s", err);
     close(sock);
   }
-  set_blocking(sock, false);
 
-  if (ssend(sock, "PING\n", 0) < 0) {
-    printf(LOCAL_TEXT(CANNOT_SEND_MESSAGE));
-    close(sock);
+  if (sock >= 0) {
+    if (ssend(sock, "PING\n", 0) < 0) {
+      printf(LOCAL_TEXT(CANNOT_SEND_MESSAGE));
+      close(sock);
+    }
   }
 
   char icons[4][32] = {
@@ -189,7 +188,7 @@ int main(int argc, char *argv[]) {
     }
     if (ptime()-last_ping >= PING_INTERVAL) {
       last_ping = ptime();
-      if (ssend(sock, "PING\n", 0) < 0) {
+      if (sock < 0 || ssend(sock, "PING\n", 0) < 0) {
         close(sock);
 
         if (status != DISCONNECTED)
