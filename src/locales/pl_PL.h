@@ -12,7 +12,7 @@ char *locale_pl_PL[] = {
 
   "Nie można przypisać adresu\n",
   "Nie można słuchać na adresie\n",
-  "Niepoprawy adres\n",
+  "Niepoprawny adres\n",
 
   "Nie można utworzyć ikony\n",
 
