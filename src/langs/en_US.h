@@ -1,8 +1,6 @@
 #ifndef en_US_H
 #define en_US_H
 
-#include "lang.h"
-
 char *lang_en_US[] = {
   "Cannot open `%s`: %s\n",
   "Cannot open socket: %s\n",

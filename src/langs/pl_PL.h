@@ -1,8 +1,6 @@
 #ifndef pl_PL_H
 #define pl_PL_H
 
-#include "lang.h"
-
 char *lang_pl_PL[] = {
   "Nie można otworzyć `%s`: %s\n",
   "Nie można otworzyć gniazda: %s\n",
