@@ -1,9 +1,9 @@
 #ifndef en_US_H
 #define en_US_H
 
-#include "locale.h"
+#include "lang.h"
 
-char *locale_en_US[] = {
+char *lang_en_US[] = {
   "Cannot open `%s`: %s\n",
   "Cannot open socket: %s\n",
 
@@ -27,16 +27,16 @@ char *locale_en_US[] = {
   "Working",
   "Problem",
 
-  "Unknown locale `%s`\n",
+  "Unknown lang `%s`\n",
   "Error in config file\n",
   "Unknown field `%s`\n"
 };
 
 char *local_string_en_US(int i) {
-  return locale_en_US[i];
+  return lang_en_US[i];
 }
 
-void set_locale_en_US() {
+void set_lang_en_US() {
   local_string_func = &local_string_en_US;
 }
 

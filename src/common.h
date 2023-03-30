@@ -23,7 +23,7 @@
 #define msleep(sec) usleep(sec * 1000000)
 #endif
 
-#include "locale.h"
+#include "lang.h"
 
 void set_blocking(int sock, bool b) {
 #ifdef __WIN32

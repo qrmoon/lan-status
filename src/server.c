@@ -24,8 +24,8 @@
 
 #include "tray/tray.h"
 #include "common.h"
-#include "locale.h"
-#include "locales/all.h"
+#include "lang.h"
+#include "langs/all.h"
 
 #define SA struct sockaddr
 
@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
   struct config config;
   load_config(&config, "config");
 
-  if (!set_locale_str(config.lang)) {
+  if (!set_lang_str(config.lang)) {
     printf(LOCAL_TEXT(UNKNOWN_LOCALE), config.lang);
   }
 
